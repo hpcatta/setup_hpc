@@ -2,6 +2,47 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 
+# Check if /data is already mounted
+if mount | grep -q "/data type"; then
+    echo "/data is already mounted."
+    already_mounted=true
+else
+    already_mounted=false
+fi
+
+# Check if /data is already in /etc/fstab
+if grep -q "10.0.0.1:/data" /etc/fstab; then
+    echo "/data is already in /etc/fstab."
+    in_fstab=true
+else
+    in_fstab=false
+fi
+
+# If neither condition is true, proceed with the setup
+if [ "$already_mounted" = false ] && [ "$in_fstab" = false ]; then
+    # Install the NFS client packages
+    echo "Installing NFS client packages..."
+    sudo apt-get update
+    sudo apt-get install -y nfs-common
+
+    # Create the mount point
+    echo "Creating /data mount point..."
+    sudo mkdir -p /data
+
+    # Mount the remote NFS directory
+    echo "Mounting /data from 10.0.0.1..."
+    sudo mount 10.0.0.1:/data /data
+
+    # Add the mount to /etc/fstab to make it permanent across reboots
+    echo "Adding mount to /etc/fstab..."
+    echo "10.0.0.1:/data /data nfs defaults 0 0" | sudo tee -a /etc/fstab
+
+    # Print completion message
+    echo "NFS client setup complete and /data directory mounted from 10.0.0.1."
+else
+    echo "No changes were made."
+fi
+
 # Check if the first argument is provided, otherwise use the hostname
 if [ -z "$1" ]; then
     echo "No client name provided, using the hostname as the client name."
@@ -153,8 +194,36 @@ if dpkg -l | grep -qw slurm; then
     echo "SLURM is already installed."
 else
     echo "Installing SLURM..."
-    cd /data/SLURM_BUILD/
-    dpkg -i slurm-22.05.9_1.1_amd64.deb
+    #cd /data/SLURM_BUILD/
+    #dpkg -i slurm-22.05.9_1.1_amd64.deb
+	# prepare to build and install SLURM
+	sudo DEBIAN_FRONTEND=noninteractive apt install python3 gcc openssl numactl hwloc lua5.3 man2html \
+     	make ruby ruby-dev libmunge-dev libpam0g-dev -y
+	sudo /usr/bin/gem install fpm
+
+	mkdir /root/slurm-tmp
+	cd /root/slurm-tmp
+	if [ "$VER" == "" ]; then
+    	export VER=20.02-latest    # latest 20.02.XX version
+    	export VER=20.11.3
+    	export VER=20.11-latest   # slurm-20.11-latest.tar.bz2
+    	export VER=20.11.9   # slurm-20.11-latest.tar.bz2
+    	export VER=22.05.9
+    	# export VER=23.02.2
+	fi
+	# https://download.schedmd.com/slurm/slurm-20.02.3.tar.bz2
+	wget https://download.schedmd.com/slurm/slurm-$VER.tar.bz2
+
+	[ $? != 0 ] && echo Problem downloading https://download.schedmd.com/slurm/slurm-$VER.tar.bz2 ... Exiting && exit
+
+	tar jxvf slurm-$VER.tar.bz2
+	cd  slurm-[0-9]*.[0-9]
+	# ./configure
+	./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-pam --with-pam_dir=/lib/x86_64-linux-gnu/security/ --without-shared-libslurm
+	make
+	make contrib
+	sudo make install
+	cd ..
 fi
 
 # Check SLURM installation
