@@ -35,7 +35,7 @@ if [ "$already_mounted" = false ] && [ "$in_fstab" = false ]; then
 
     # Add the mount to /etc/fstab to make it permanent across reboots
     echo "Adding mount to /etc/fstab..."
-    echo "10.0.0.1:/data /data nfs defaults 0 0" | sudo tee -a /etc/fstab
+    echo "10.0.0.1:/data /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0" | sudo tee -a /etc/fstab
 
     # Print completion message
     echo "NFS client setup complete and /data directory mounted from 10.0.0.1."
