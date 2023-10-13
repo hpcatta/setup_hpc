@@ -19,6 +19,9 @@ sudo apt install -y libfftw3-dev
 # Install ScalAPACK (this will also install openMPI as a dependency)
 sudo apt install -y libscalapack-mpi-dev
 
+# Install NVIDIA GPU drivers
+sudo apt install -y nvidia-driver-460
+
 # Install NVIDIA CUDA (assuming you are using Ubuntu 20.04)
 
 # For other versions of Ubuntu, you might need a different repository
@@ -34,9 +37,8 @@ sudo add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/r
 # Update package list
 sudo apt update
 
-# Install CUDA
-# If there's an issue with the repo signature, the '--allow-unauthenticated' flag can be a temporary solution
-sudo apt install -y cuda --allow-unauthenticated
+# Install CUDA (this should also install the required NVIDIA GPU drivers)
+sudo apt install -y cuda
 
 # After installing, users might want to add CUDA to PATH and LD_LIBRARY_PATH in their .bashrc or .zshrc:
 # export PATH=/usr/local/cuda/bin:${PATH}
