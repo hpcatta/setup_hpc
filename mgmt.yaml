@@ -1,0 +1,7 @@
+network:
+  version: 2
+  ethernets:
+    ens2f1:
+      addresses:
+        - 192.168.168.240/24
+
