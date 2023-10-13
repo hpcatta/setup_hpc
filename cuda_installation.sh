@@ -20,15 +20,25 @@ sudo apt install -y libfftw3-dev
 sudo apt install -y libscalapack-mpi-dev
 
 # Install NVIDIA CUDA (assuming you are using Ubuntu 20.04)
+
 # For other versions of Ubuntu, you might need a different repository
 wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
 sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
-sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
-sudo add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
-sudo apt update
-sudo apt install -y cuda
 
-# After installing, you might want to add CUDA to PATH and LD_LIBRARY_PATH in your .bashrc or .zshrc:
+# Re-add NVIDIA GPG Key
+sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+
+# Add the repository
+sudo add-apt-repository "deb http://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+
+# Update package list
+sudo apt update
+
+# Install CUDA
+# If there's an issue with the repo signature, the '--allow-unauthenticated' flag can be a temporary solution
+sudo apt install -y cuda --allow-unauthenticated
+
+# After installing, users might want to add CUDA to PATH and LD_LIBRARY_PATH in their .bashrc or .zshrc:
 # export PATH=/usr/local/cuda/bin:${PATH}
 # export LD_LIBRARY_PATH=/usr/local/cuda/lib64:${LD_LIBRARY_PATH}
 
