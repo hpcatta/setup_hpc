@@ -2,58 +2,46 @@
 set -e  # Exit immediately if a command exits with a non-zero status
 
 
-# Function to handle the mounting process
-handle_mount() {
-    local dir="$1"
-    
-    # Check if directory is already mounted
-    if mount | grep -q "$dir type"; then
-        echo "$dir is already mounted."
-        already_mounted=true
-    else
-        already_mounted=false
-    fi
+# Check if /data is already mounted
+if mount | grep -q "/data type"; then
+    echo "/data is already mounted."
+    already_mounted=true
+else
+    already_mounted=false
+fi
 
-    # Check if directory is already in /etc/fstab
-    if grep -q "10.0.0.1:$dir" /etc/fstab; then
-        echo "$dir is already in /etc/fstab."
-        in_fstab=true
-    else
-        in_fstab=false
-    fi
+# Check if /data is already in /etc/fstab
+if grep -q "10.0.0.1:/data" /etc/fstab; then
+    echo "/data is already in /etc/fstab."
+    in_fstab=true
+else
+    in_fstab=false
+fi
 
-    # If neither condition is true, proceed with the setup
-    if [ "$already_mounted" = false ] && [ "$in_fstab" = false ]; then
-        # Create the mount point
-        echo "Creating $dir mount point..."
-        sudo mkdir -p $dir
+# If neither condition is true, proceed with the setup
+if [ "$already_mounted" = false ] && [ "$in_fstab" = false ]; then
+    # Install the NFS client packages
+    echo "Installing NFS client packages..."
+    sudo apt-get update
+    sudo apt-get install -y nfs-common
 
-        # Mount the remote NFS directory
-        echo "Mounting $dir from 10.0.0.1..."
-        sudo mount 10.0.0.1:$dir $dir
+    # Create the mount point
+    echo "Creating /data mount point..."
+    sudo mkdir -p /data
 
-        # Add the mount to /etc/fstab to make it permanent across reboots
-        echo "Adding mount to /etc/fstab..."
-        echo "10.0.0.1:$dir $dir nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0" | sudo tee -a /etc/fstab
+    # Mount the remote NFS directory
+    echo "Mounting /data from 10.0.0.1..."
+    sudo mount 10.0.0.1:/data /data
 
-        # Print completion message
-        echo "NFS client setup complete and $dir directory mounted from 10.0.0.1."
-    else
-        echo "No changes were made for $dir."
-    fi
-}
+    # Add the mount to /etc/fstab to make it permanent across reboots
+    echo "Adding mount to /etc/fstab..."
+    echo "10.0.0.1:/data /data nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0" | sudo tee -a /etc/fstab
 
-# Install the NFS client packages
-echo "Installing NFS client packages..."
-sudo apt-get update
-sudo apt-get install -y nfs-common
-
-# Handle /data
-handle_mount "/data"
-
-# Handle /home
-handle_mount "/home"
-
+    # Print completion message
+    echo "NFS client setup complete and /data directory mounted from 10.0.0.1."
+else
+    echo "No changes were made."
+fi
 
 # Check if the first argument is provided, otherwise use the hostname
 if [ -z "$1" ]; then
