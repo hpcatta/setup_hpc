@@ -34,7 +34,7 @@ handle_mount() {
 
         # Add the mount to /etc/fstab to make it permanent across reboots
         echo "Adding mount to /etc/fstab..."
-        echo "10.0.0.1:$dir $dir nfs4 nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport,_netdev 0 0" | sudo tee -a /etc/fstab
+        echo "10.0.0.1:$dir $dir nfs4 defaults 0 0" | sudo tee -a /etc/fstab
 
         # Print completion message
         echo "NFS client setup complete and $dir directory mounted from 10.0.0.1."
@@ -202,7 +202,7 @@ sudo systemctl start munge || true
 echo "Checking Munge service status..."
 sudo systemctl status munge
 # Install SLURM only if not already installed
-if dpkg -l | grep -qw slurm; then
+if which slurmd &> /dev/null; then
     echo "SLURM is already installed."
 else
     echo "Installing SLURM..."
