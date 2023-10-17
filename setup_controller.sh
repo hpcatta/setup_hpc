@@ -135,6 +135,7 @@ cat << EOF | sudo tee /etc/slurm/slurm.conf
 # See the slurm.conf man page for more information.
 #
 SlurmctldHost=localhost
+#SlurmctldAddr=
 #
 #MailProg=/bin/mail
 MpiDefault=none
