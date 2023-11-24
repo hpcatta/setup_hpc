@@ -92,39 +92,7 @@ if [ "$OSVERSION" == "9" ] ; then
     sudo dnf --enablerepo=crb install rrdtool-devel lua-devel hwloc-devel -y
     # dnf group install "Development Tools"
 fi
- 
-mkdir -p /omni/apps/slurm/slurm-tmp
-cd /omni/apps/slurm/slurm-tmp
-if [ "$VER" == "" ]; then
-    #export VER=20.02-latest    # latest 20.02.XX version
-    #export VER=20.11.3
-    #export VER=20.11-latest   # slurm-20.11-latest.tar.bz2
-    #export VER=20.11.9        # slurm-20.11-latest.tar.bz2
-    #export VER=22.05.9
-    export VER=23.02.2
-fi
-# https://download.schedmd.com/slurm/slurm-20.02.3.tar.bz2
-wget https://download.schedmd.com/slurm/slurm-$VER.tar.bz2
- 
-[ $? != 0 ] && echo Problem downloading https://download.schedmd.com/slurm/slurm-$VER.tar.bz2 ... Exiting && exit
- 
- 
-if [ "$OSVERSION" == "9" ] ; then
-    # fix LTO issue on 9
-    # https://bugs.schedmd.com/show_bug.cgi?id=14565
-    rpmbuild -ta slurm-$VER.tar.bz2 --define '_lto_cflags %{nil}'     # and wait a few minutes until SLURM has been compiled
-else
-    rpmbuild -ta slurm-$VER.tar.bz2     # and wait a few minutes until SLURM has been compiled
-fi
-# if [ "$OSVERSION" == "7" ] ; then
-# fi
-# if [ "$OSVERSION" == "8" ] ; then
-#     rpm-build -ta slurm-$VER.tar.bz2    # and wait a few minutes until SLURM has been compiled
-# fi
- 
-rm slurm-$VER.tar.bz2
-cd ..
-rmdir slurm-tmp
+cp -rp /omni/apps/slurm/rpmbuild /root/ 
  
 # get perl-Switch
 # sudo yum install cpan -y
