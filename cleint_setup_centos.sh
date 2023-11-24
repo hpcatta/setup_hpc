@@ -68,7 +68,7 @@ sudo rngd -r /dev/urandom
 ##sudo /usr/sbin/create-munge-key -r -f
  
 ##sudo sh -c  "dd if=/dev/urandom bs=1 count=1024 > /etc/munge/munge.key"
-cp -p /omni/apps/slurm/munge /etc/
+cp -rp /omni/apps/slurm/munge /etc/
 sudo chown munge: /etc/munge/munge.key
 sudo chmod 400 /etc/munge/munge.key
  
