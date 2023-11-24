@@ -112,7 +112,7 @@ if [ "$OSVERSION" == "9" ] ; then
     # dnf group install "Development Tools"
 fi
  
-mkdir /omni/apps/slurm/slurm-tmp
+mkdir -p /omni/apps/slurm/slurm-tmp
 cd /omni/apps/slurm/slurm-tmp
 if [ "$VER" == "" ]; then
     #export VER=20.02-latest    # latest 20.02.XX version
