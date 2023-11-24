@@ -34,7 +34,7 @@ fi
 if [[ $VERSION =~ ^9 ]] ; then
     OSVERSION="9"
 fi
- 
+#test comment
 # SLURM accounting support
 if [ "$OSVERSION" == "9" ] ; then
     sudo yum install mariadb-server  dnf -y
