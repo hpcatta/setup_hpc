@@ -8,7 +8,7 @@ Group=root
 TimeoutStartSec=0
 Restart=on-failure
 RestartSec=15s
-ExecStart=/data/gui/slurm_gui/main.py
+ExecStart=/data/gui/slurm_gui/slurm_gui_run.sh
 SyslogIdentifier=SLURM_GUI
 
 [Install]
