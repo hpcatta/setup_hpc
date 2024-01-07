@@ -1,0 +1,15 @@
+[Unit]
+Description=SLURM GUI
+
+[Service]
+Type=simple
+User=root
+Group=root
+TimeoutStartSec=0
+Restart=on-failure
+RestartSec=15s
+ExecStart=/data/gui/slurm_gui/main.py
+SyslogIdentifier=SLURM_GUI
+
+[Install]
+WantedBy=multi-user.targe
