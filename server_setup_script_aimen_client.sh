@@ -191,7 +191,9 @@ fi
 #    echo "Copying Munge key..."
 #    cp -rp /data/munge.key /etc/munge/
 #fi
-cp -rp /data/munge.key /etc/munge/
+cp  /data/munge.key /etc/munge/
+sudo chown -R  munge:munge /etc/munge
+sudo chmod 400 /etc/munge/munge.key
 cp /data/shared_files/hosts /etc/hosts
 # Enabling and starting Munge service
 echo "Enabling and starting Munge service..."
