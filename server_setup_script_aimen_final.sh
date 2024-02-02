@@ -179,7 +179,8 @@ sudo systemctl start munge || true
 echo "Checking Munge service status..."
 sudo systemctl status munge
 # Install SLURM only if not already installed
-if dpkg -l | grep -qw slurm; then
+which slurmd
+if [ $? -eq 0 ] ; then
     echo "SLURM is already installed."
 else
 #    echo "Installing SLURM..."
