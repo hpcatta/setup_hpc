@@ -288,4 +288,4 @@ sudo systemctl restart munge
 sudo systemctl restart slurmd
 
 echo "Server setup complete."
-
+apt-get install llvm -y 
