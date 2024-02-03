@@ -1,0 +1,42 @@
+---
+- name: Install and configure Prometheus
+  hosts: all
+  become: true
+  roles:
+    - cloudalchemy.prometheus
+  vars:
+    prometheus_global_scrape_interval: 15s
+    prometheus_targets:
+      node:
+        - targets:
+          - localhost:9100  # Monitoring the Prometheus node itself
+          labels:
+            env: dev
+    prometheus_scrape_configs:
+      - job_name: 'node'
+        static_configs:
+          - targets: []
+    prometheus_alertmanager_config:
+      - name: alertmanager
+        static_configs:
+          - targets:
+            - localhost:9093 # Assuming Alertmanager is running on the same node
+    prometheus_rules:
+      - name: example
+        groups:
+          - name: instance_down
+            rules:
+              - alert: InstanceDown
+                expr: up == 0
+                for: 5m
+                labels:
+                  severity: page
+                annotations:
+                  summary: "Instance {{ $labels.instance }} down"
+                  description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes."
+  pre_tasks:
+    - name: Dynamically configure Prometheus to monitor all nodes in 'client_nodes' group
+      set_fact:
+        prometheus_scrape_configs: "{{ prometheus_scrape_configs | default([]) + [{'job_name': 'node_exporter', 'static_configs': [{'targets': groups['client_nodes'] | map('regex_replace', '^(.*)$', '\\1:9100') | list}]}] }}"
+      when: "'client_nodes' in groups"
+
