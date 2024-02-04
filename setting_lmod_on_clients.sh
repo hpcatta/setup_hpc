@@ -18,7 +18,7 @@ sudo apt-get install -y lua-posix lua-filesystem lua-json lua-term luajit
 echo "Setting up environment for Lmod..."
 if [ ! -f /etc/profile.d/lmod.sh ]; then
     echo "# Lmod Setup" | sudo tee /etc/profile.d/lmod.sh
-    echo "source ${INSTALL_DIR}/lmod/8.6/init/bash" | sudo tee -a /etc/profile.d/lmod.sh
+    echo "source ${INSTALL_DIR}/lmod/lmod/init/bash" | sudo tee -a /etc/profile.d/lmod.sh
 else
     echo "Lmod environment script already exists."
 fi
