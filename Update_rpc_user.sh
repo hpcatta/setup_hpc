@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define new UIDs and GIDs
-newUID_rpc=114
-newUID_statd=115
+newUID_rpc=214
+newUID_statd=215
 newGID=65534
 
 # 1. Identify the Current UID and GID
