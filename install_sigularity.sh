@@ -3,33 +3,46 @@
 # Stop on error
 set -e
 
-# Singularity version to install
-SINGULARITY_VERSION=3.8.3 # Change this to the desired version
+# Install dependencies
+sudo apt-get update && sudo apt-get install -y \
+    build-essential \
+    libssl-dev \
+    uuid-dev \
+    libgpgme11-dev \
+    squashfs-tools \
+    libseccomp-dev \
+    wget \
+    pkg-config \
+    git \
+    cryptsetup-bin
 
-# Update and install dependencies
-sudo apt update
-sudo apt install -y build-essential libssl-dev uuid-dev libgpgme11-dev squashfs-tools libseccomp-dev wget pkg-config git cryptsetup-bin
+# Go Version: Replace '1.17' with the version recommended in the INSTALL.md or the version you prefer
+GO_VERSION=1.17
+wget https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzvf go${GO_VERSION}.linux-amd64.tar.gz
+export PATH=/usr/local/go/bin:$PATH
+echo 'export PATH=/usr/local/go/bin:$PATH' >> ~/.bashrc
 
-# Download Singularity source code
-wget https://github.com/sylabs/singularity/releases/download/v${SINGULARITY_VERSION}/singularity-${SINGULARITY_VERSION}.tar.gz
+# Clone Singularity
+git clone https://github.com/sylabs/singularity.git
+cd singularity
 
-# Extract Singularity
-tar -xzf singularity-${SINGULARITY_VERSION}.tar.gz
-
-# Change to the Singularity source directory
-cd singularity-${SINGULARITY_VERSION}
+# Check out the desired version or branch
+# Use `git tag` to list all available versions and replace `main` with a specific version if needed
+git checkout main
 
 # Compile Singularity
 ./mconfig
-make -C builddir
-sudo make -C builddir install
+cd builddir
+make
+sudo make install
 
-# Cleanup source directory
-cd ..
-rm -rf singularity-${SINGULARITY_VERSION} singularity-${SINGULARITY_VERSION}.tar.gz
+# Cleanup
+cd ../..
+rm -rf singularity go${GO_VERSION}.linux-amd64.tar.gz
 
 # Verify installation
 singularity version
 
-echo "Singularity ${SINGULARITY_VERSION} installation completed successfully."
+echo "Singularity installation completed successfully."
 
