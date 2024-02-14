@@ -7,6 +7,7 @@ sudo apt-get -y install isc-dhcp-server
 #If you have configured dhcpd.conf then remove this exit 1
 #exit 1
 # Function to add a DHCP host configuration
+# Function to add a DHCP host configuration
 add_dhcp_host() {
     cat <<EOF
 
@@ -14,6 +15,19 @@ add_dhcp_host() {
         hardware ethernet $2;
         fixed-address $3;
     }
+EOF
+}
+
+# Function to add a subnet configuration
+add_subnet() {
+    cat <<EOF
+
+subnet $1 netmask $2 {
+    range $3 $4;
+    option routers $5;
+    option subnet-mask $2;
+    option domain-name-servers $6;
+}
 EOF
 }
 
@@ -28,19 +42,18 @@ max-lease-time 7200;
 
 # Specify the DNS settings
 option domain-name-servers 192.168.168.1;
-
-# Define the subnet
-subnet 192.168.168.0 netmask 255.255.255.0 {
-    range 192.168.168.100 192.168.168.199; # Dynamic range
-    option subnet-mask 255.255.255.0;
-    option broadcast-address 192.168.168.255;
-    option routers 192.168.168.1; # Gateway
 EOF
 
-# Add client configurations
+# Define the main subnet
+add_subnet "192.168.168.0" "255.255.255.0" "192.168.168.100" "192.168.168.199" "192.168.168.1" "8.8.8.8, 8.8.4.4" >> $TEMP_CONF
+
+# Add client configurations for the main subnet
 add_dhcp_host "hpc-client-1" "68:05:ca:f3:55:29" "192.168.168.241" >> $TEMP_CONF
 add_dhcp_host "hpc-client-2" "68:05:ca:f0:cf:e1" "192.168.168.242" >> $TEMP_CONF
 add_dhcp_host "hpc-client-3" "68:05:ca:f0:bc:7b" "192.168.168.243" >> $TEMP_CONF
+
+# Define additional subnet for ens3f1
+add_subnet "10.0.0.0" "255.255.255.0" "10.0.0.2" "10.0.0.254" "10.0.0.1" "8.8.8.8, 8.8.4.4" >> $TEMP_CONF
 
 # Close subnet definition
 echo "}" >> $TEMP_CONF
