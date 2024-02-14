@@ -1,0 +1,3 @@
+root@hpc-master:/data/benchmarking/hpl_benchmarking/hpl/bin/linux# cat slurm_run2
+#!/bin/bash
+mpirun --mca btl_tcp_if_include ens3f1 --mca oob_tcp_if_include ens3f1  --allow-run-as-root -n 128 ./xhpl
