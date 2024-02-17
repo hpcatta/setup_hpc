@@ -100,4 +100,9 @@ systemctl restart nfs-kernel-server
 
 #Setting up the tftpd-hpa
 apt-get -y install tftpd-hpa
-
+# Step 2: Copy client OS root filesystems (These commands need to be adjusted or run manually per client)
+# This is a placeholder to indicate where you would copy each client's filesystem.
+# For example, manually perform for each client:
+# mount -t nfs -onolock $NFS_SERVER_IP:/nfsroot/hpc-client-1 /mnt
+# cp -ax /path/to/client1/os/. /mnt/.
+# cp -ax /path/to/client1/dev/. /mnt/dev/.
