@@ -1,0 +1,414 @@
+So you have two type of booting one is legacy boot and other is uefi
+While doing the legacy boot pxelinux.0 boot loader file is required also while doing with uefi mode you need to do with grub. 
+For grub you need filename "grubx64.efi" file . 
+Each bootloader file expect some content to be there in respective location like for pxelinux it should be in pxelinux.cfg folder and for grub it should be in grub folder .
+Bootloader should be compatible with netboot and that why downloading the netboot repo is must
+Also during networkboot you need to insure that what configuration is running in your system at bios level . You need to check legacy mode or uefi mode . You need to turn network booting on. 
+Also you can follow this doc to make your nfs setup ready as per the requirement of diskless booting : https://pages.cs.wisc.edu/~govindan/steps
+Also normally tftp work on port 69 so make sure your system has port 69 open. 
+In your dhcp you need to give filename of the bootloader file . 
+Then when the bootloder load it check the relevant file like first it take vmlinuz and then take initrd.img and then boot os .
+You also need to nfs-server ready with each node filesystem exported.
+
+
+
+
+
+
+
+
+#Download this repo to get the bootfiles 
+wget http://cdimage.ubuntu.com/ubuntu-server/daily-live/current/noble-netboot-amd64.tar.gz
+setup your dhcp 
+root@hpc-master:/home/technotel# cat /etc/dhcp/dhcpd.conf
+ddns-update-style none;
+default-lease-time 600;
+max-lease-time 7200;
+#ping-check false;
+allow booting;
+allow bootp;
+#not authoritative;
+#log-facility local7;
+# Specify the DNS settings
+option domain-name-servers 192.168.168.240;
+#option domain-name-servers 10.0.0.1;
+
+
+subnet 192.168.168.0 netmask 255.255.255.0 {
+    range 192.168.168.241 192.168.168.243;
+    option routers 192.168.168.240;
+    option subnet-mask 255.255.255.0;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+#    filename "uefi/syslinux.efi";
+    filename "grubx64.efi";
+#    filename "efi/EFI/BOOT/BOOTX64.EFI";
+#    filename "grub/grubx64.efi";
+    next-server 192.168.168.240;
+}
+
+    host hpc-client-1 {
+        hardware ethernet 68:05:ca:f3:55:26;
+        fixed-address 192.168.168.241;
+    }
+#    host hpc-client-1 {
+#        hardware ethernet a0:36:9f:be:0d:7a;
+#        fixed-address 192.168.168.241;
+#    }
+
+    host hpc-client-2 {
+        hardware ethernet 68:05:ca:f0:cf:e1;
+        fixed-address 192.168.168.242;
+    }
+
+    host hpc-client-3 {
+        hardware ethernet 68:05:ca:f0:bc:7b;
+        fixed-address 192.168.168.243;
+    }
+
+subnet 10.0.0.0 netmask 255.255.255.0 {
+    range 10.0.0.2 10.0.0.4;
+    option routers 10.0.0.1;
+    option subnet-mask 255.255.255.0;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+#    filename "uefi/syslinux.efi";
+#    filename "grub/grubx64.efi";
+#    filename "efi/EFI/ubuntu/grubx64.efi";
+#    next-server 10.0.0.1;
+}
+#    host hpc-client-1 {
+#        hardware ethernet a0:36:9f:be:0d:7a;
+#        fixed-address 10.0.0.2;
+#    }
+
+
+
+
+#Then setup tftp like this 
+root@hpc-master:/home/technotel# cat /etc/default/tftpd-hpa
+#RUN_DAEMON="yes"
+#TFTP_OPTIONS="--blocksize 734"
+#TFTP_TIMEOUT="--timeout 3600"
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/var/lib/tftpboot"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure -4"
+
+
+
+
+#We can setup /var/lib/tftpboot like this 
+root@hpc-master:/home/technotel# tree /var/lib/tftpboot
+/var/lib/tftpboot
+├── bootx64.efi
+├── grub
+│   ├── fonts
+│   │   └── unicode.pf2
+│   ├── grub.cfg
+│   ├── grub.cfg_bkp
+│   ├── grubenv
+│   ├── locale
+│   ├── unicode.pf2
+│   └── x86_64-efi
+│       ├── acpi.mod
+│       ├── adler32.mod
+│       ├── affs.mod
+│       ├── afs.mod
+│       ├── afsplitter.mod
+│       ├── ahci.mod
+│       ├── all_video.mod
+│       ├── aout.mod
+│       ├── appleldr.mod
+│       ├── archelp.mod
+│       ├── ata.mod
+│       ├── at_keyboard.mod
+│       ├── backtrace.mod
+│       ├── bfs.mod
+│       ├── bitmap.mod
+│       ├── bitmap_scale.mod
+│       ├── blocklist.mod
+│       ├── boot.mod
+│       ├── bsd.mod
+│       ├── bswap_test.mod
+│       ├── btrfs.mod
+│       ├── bufio.mod
+│       ├── cat.mod
+│       ├── cbfs.mod
+│       ├── cbls.mod
+│       ├── cbmemc.mod
+│       ├── cbtable.mod
+│       ├── cbtime.mod
+│       ├── chain.mod
+│       ├── cmdline_cat_test.mod
+│       ├── cmp.mod
+│       ├── cmp_test.mod
+│       ├── command.lst
+│       ├── configfile.mod
+│       ├── core.efi
+│       ├── cpio_be.mod
+│       ├── cpio.mod
+│       ├── cpuid.mod
+│       ├── crc64.mod
+│       ├── cryptodisk.mod
+│       ├── crypto.lst
+│       ├── crypto.mod
+│       ├── cs5536.mod
+│       ├── ctz_test.mod
+│       ├── datehook.mod
+│       ├── date.mod
+│       ├── datetime.mod
+│       ├── diskfilter.mod
+│       ├── disk.mod
+│       ├── div.mod
+│       ├── div_test.mod
+│       ├── dm_nv.mod
+│       ├── echo.mod
+│       ├── efifwsetup.mod
+│       ├── efi_gop.mod
+│       ├── efinet.mod
+│       ├── efi_uga.mod
+│       ├── ehci.mod
+│       ├── elf.mod
+│       ├── eval.mod
+│       ├── exfat.mod
+│       ├── exfctest.mod
+│       ├── ext2.mod
+│       ├── extcmd.mod
+│       ├── f2fs.mod
+│       ├── fat.mod
+│       ├── file.mod
+│       ├── fixvideo.mod
+│       ├── font.mod
+│       ├── fshelp.mod
+│       ├── fs.lst
+│       ├── functional_test.mod
+│       ├── gcry_arcfour.mod
+│       ├── gcry_blowfish.mod
+│       ├── gcry_camellia.mod
+│       ├── gcry_cast5.mod
+│       ├── gcry_crc.mod
+│       ├── gcry_des.mod
+│       ├── gcry_dsa.mod
+│       ├── gcry_idea.mod
+│       ├── gcry_md4.mod
+│       ├── gcry_md5.mod
+│       ├── gcry_rfc2268.mod
+│       ├── gcry_rijndael.mod
+│       ├── gcry_rmd160.mod
+│       ├── gcry_rsa.mod
+│       ├── gcry_seed.mod
+│       ├── gcry_serpent.mod
+│       ├── gcry_sha1.mod
+│       ├── gcry_sha256.mod
+│       ├── gcry_sha512.mod
+│       ├── gcry_tiger.mod
+│       ├── gcry_twofish.mod
+│       ├── gcry_whirlpool.mod
+│       ├── geli.mod
+│       ├── gettext.mod
+│       ├── gfxmenu.mod
+│       ├── gfxterm_background.mod
+│       ├── gfxterm_menu.mod
+│       ├── gfxterm.mod
+│       ├── gptsync.mod
+│       ├── grub.efi
+│       ├── gzio.mod
+│       ├── halt.mod
+│       ├── hashsum.mod
+│       ├── hdparm.mod
+│       ├── hello.mod
+│       ├── help.mod
+│       ├── hexdump.mod
+│       ├── hfs.mod
+│       ├── hfspluscomp.mod
+│       ├── hfsplus.mod
+│       ├── http.mod
+│       ├── iorw.mod
+│       ├── iso9660.mod
+│       ├── jfs.mod
+│       ├── jpeg.mod
+│       ├── json.mod
+│       ├── keylayouts.mod
+│       ├── keystatus.mod
+│       ├── ldm.mod
+│       ├── legacycfg.mod
+│       ├── legacy_password_test.mod
+│       ├── linux16.mod
+│       ├── linuxefi.mod
+│       ├── linux.mod
+│       ├── loadbios.mod
+│       ├── load.cfg
+│       ├── loadenv.mod
+│       ├── loopback.mod
+│       ├── lsacpi.mod
+│       ├── lsefimmap.mod
+│       ├── lsefi.mod
+│       ├── lsefisystab.mod
+│       ├── lsmmap.mod
+│       ├── ls.mod
+│       ├── lspci.mod
+│       ├── lssal.mod
+│       ├── luks2.mod
+│       ├── luks.mod
+│       ├── lvm.mod
+│       ├── lzopio.mod
+│       ├── macbless.mod
+│       ├── macho.mod
+│       ├── mdraid09_be.mod
+│       ├── mdraid09.mod
+│       ├── mdraid1x.mod
+│       ├── memdisk.mod
+│       ├── memrw.mod
+│       ├── minicmd.mod
+│       ├── minix2_be.mod
+│       ├── minix2.mod
+│       ├── minix3_be.mod
+│       ├── minix3.mod
+│       ├── minix_be.mod
+│       ├── minix.mod
+│       ├── mmap.mod
+│       ├── moddep.lst
+│       ├── modinfo.sh
+│       ├── morse.mod
+│       ├── mpi.mod
+│       ├── msdospart.mod
+│       ├── mul_test.mod
+│       ├── multiboot2.mod
+│       ├── multiboot.mod
+│       ├── nativedisk.mod
+│       ├── net.mod
+│       ├── newc.mod
+│       ├── nilfs2.mod
+│       ├── normal.mod
+│       ├── ntfscomp.mod
+│       ├── ntfs.mod
+│       ├── odc.mod
+│       ├── offsetio.mod
+│       ├── ohci.mod
+│       ├── part_acorn.mod
+│       ├── part_amiga.mod
+│       ├── part_apple.mod
+│       ├── part_bsd.mod
+│       ├── part_dfly.mod
+│       ├── part_dvh.mod
+│       ├── part_gpt.mod
+│       ├── partmap.lst
+│       ├── part_msdos.mod
+│       ├── part_plan.mod
+│       ├── part_sun.mod
+│       ├── part_sunpc.mod
+│       ├── parttool.lst
+│       ├── parttool.mod
+│       ├── password.mod
+│       ├── password_pbkdf2.mod
+│       ├── pata.mod
+│       ├── pbkdf2.mod
+│       ├── pbkdf2_test.mod
+│       ├── pcidump.mod
+│       ├── pgp.mod
+│       ├── play.mod
+│       ├── png.mod
+│       ├── priority_queue.mod
+│       ├── probe.mod
+│       ├── procfs.mod
+│       ├── progress.mod
+│       ├── raid5rec.mod
+│       ├── raid6rec.mod
+│       ├── random.mod
+│       ├── rdmsr.mod
+│       ├── read.mod
+│       ├── reboot.mod
+│       ├── regexp.mod
+│       ├── reiserfs.mod
+│       ├── relocator.mod
+│       ├── romfs.mod
+│       ├── scsi.mod
+│       ├── search_fs_file.mod
+│       ├── search_fs_uuid.mod
+│       ├── search_label.mod
+│       ├── search.mod
+│       ├── serial.mod
+│       ├── setjmp.mod
+│       ├── setjmp_test.mod
+│       ├── setpci.mod
+│       ├── sfs.mod
+│       ├── shift_test.mod
+│       ├── signature_test.mod
+│       ├── sleep.mod
+│       ├── sleep_test.mod
+│       ├── smbios.mod
+│       ├── spkmodem.mod
+│       ├── squash4.mod
+│       ├── strtoull_test.mod
+│       ├── syslinuxcfg.mod
+│       ├── tar.mod
+│       ├── terminal.lst
+│       ├── terminal.mod
+│       ├── terminfo.mod
+│       ├── test_blockarg.mod
+│       ├── testload.mod
+│       ├── test.mod
+│       ├── testspeed.mod
+│       ├── tftp.mod
+│       ├── tga.mod
+│       ├── time.mod
+│       ├── tpm.mod
+│       ├── trig.mod
+│       ├── tr.mod
+│       ├── true.mod
+│       ├── udf.mod
+│       ├── ufs1_be.mod
+│       ├── ufs1.mod
+│       ├── ufs2.mod
+│       ├── uhci.mod
+│       ├── usb_keyboard.mod
+│       ├── usb.mod
+│       ├── usbms.mod
+│       ├── usbserial_common.mod
+│       ├── usbserial_ftdi.mod
+│       ├── usbserial_pl2303.mod
+│       ├── usbserial_usbdebug.mod
+│       ├── usbtest.mod
+│       ├── video_bochs.mod
+│       ├── video_cirrus.mod
+│       ├── video_colors.mod
+│       ├── video_fb.mod
+│       ├── videoinfo.mod
+│       ├── video.lst
+│       ├── video.mod
+│       ├── videotest_checksum.mod
+│       ├── videotest.mod
+│       ├── wrmsr.mod
+│       ├── xfs.mod
+│       ├── xnu.mod
+│       ├── xnu_uuid.mod
+│       ├── xnu_uuid_test.mod
+│       ├── xzio.mod
+│       ├── zfscrypt.mod
+│       ├── zfsinfo.mod
+│       ├── zfs.mod
+│       └── zstd.mod
+├── grubx64.efi
+├── initrd
+├── initrd.img
+├── ldlinux.c32
+├── linux
+├── pxelinux.0
+├── pxelinux.cfg
+│   └── default
+└── vmlinuz
+
+
+#also copy the vmlinz and initrd.img from /boot directory 
+Also the content of grub folder can be taken from /boot directory . 
+Also below is the content of grub/grub.cfg
+root@hpc-master:/home/technotel# cat /var/lib/tftpboot/grub/grub.cfg
+set timeout=30
+set default=0
+
+menuentry "Boot Ubuntu via NFS" {
+    echo 'Loading Linux kernel...'
+    linux vmlinuz root=/dev/nfs nfsroot=192.168.168.240:/nfsroot/hpc-client-1 ip=dhcp rw netboot=nfs all_generic_ide debug
+    echo 'Loading initial ramdisk...'
+    initrd initrd.img
+}
+

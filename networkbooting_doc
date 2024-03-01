@@ -1,0 +1,71 @@
+Diskless Booting with UEFI and GRUB
+Diskless booting enables a computer to boot directly from a network, eliminating the need for a local hard disk. There are two main types of booting processes: Legacy Boot and UEFI Boot. This document focuses on UEFI Boot using GRUB as the bootloader.
+
+Prerequisites
+Bootloader Compatibility: Ensure the bootloader supports network booting. For UEFI, grubx64.efi is required.
+Bootloader Configuration: Place the bootloader configuration files in the correct directories. For PXELINUX (Legacy Boot), use the pxelinux.cfg folder. For GRUB (UEFI Boot), use the grub folder.
+Network Boot Support: The bootloader must support netboot. Downloading the netboot version of your chosen distribution is essential.
+BIOS Configuration: Confirm the system's BIOS is set to the correct boot mode (Legacy or UEFI) and that network booting is enabled.
+Setting Up NFS
+Follow this guide to configure NFS according to the requirements of diskless booting. Ensure your NFS server is properly set up and accessible.
+
+DHCP Configuration
+Configure your DHCP server to direct booting clients to the appropriate bootloader file. The DHCP configuration should specify the filename of the bootloader and the TFTP server's IP address.
+
+Example DHCP configuration:
+
+plaintext
+Copy code
+subnet 192.168.168.0 netmask 255.255.255.0 {
+    range 192.168.168.241 192.168.168.243;
+    option routers 192.168.168.240;
+    option subnet-mask 255.255.255.0;
+    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    filename "grubx64.efi";
+    next-server 192.168.168.240;
+}
+TFTP Server Setup
+The Trivial File Transfer Protocol (TFTP) server hosts the boot files needed by the client machines. Configure the TFTP server with the following settings:
+
+plaintext
+Copy code
+TFTP_USERNAME="tftp"
+TFTP_DIRECTORY="/var/lib/tftpboot"
+TFTP_ADDRESS=":69"
+TFTP_OPTIONS="--secure -4"
+Ensure the TFTP server is listening on port 69 and is accessible from the client machines.
+
+Preparing the TFTP Root Directory
+Populate the /var/lib/tftpboot directory with the necessary boot files. This includes grubx64.efi, kernel (vmlinuz), and initial ramdisk (initrd.img). You can obtain these files from the netboot version of your distribution or copy them from the /boot directory.
+
+Structure of /var/lib/tftpboot:
+
+plaintext
+Copy code
+/var/lib/tftpboot
+├── bootx64.efi
+├── grub
+│   ├── fonts
+│   │   └── unicode.pf2
+│   ├── grub.cfg
+│   └── x86_64-efi
+├── vmlinuz
+└── initrd.img
+GRUB Configuration for Network Boot
+The grub.cfg file within the grub directory should be configured to boot from NFS. Example configuration:
+
+grub
+Copy code
+set timeout=30
+set default=0
+
+menuentry "Boot Ubuntu via NFS" {
+    echo 'Loading Linux kernel...'
+    linux /vmlinuz root=/dev/nfs nfsroot=192.168.168.240:/nfsroot/hpc-client-1 ip=dhcp rw netboot=nfs
+    echo 'Loading initial ramdisk...'
+    initrd /initrd.img
+}
+Replace 192.168.168.240:/nfsroot/hpc-client-1 with the actual NFS server IP and export path. Ensure the vmlinuz and initrd.img paths are correct.
+
+Conclusion
+By following these steps, you can set up diskless booting for clients in a network environment using UEFI and GRUB. Ensure all network services (DHCP, TFTP, NFS) are correctly configured and accessible to facilitate a smooth booting process.
