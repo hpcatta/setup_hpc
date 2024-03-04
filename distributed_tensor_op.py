@@ -1,6 +1,16 @@
 import os
+import time
 import torch
 import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel as DDP
+
+class SimpleModel(torch.nn.Module):
+    def __init__(self, size):
+        super(SimpleModel, self).__init__()
+        self.linear = torch.nn.Linear(size, size)
+
+    def forward(self, x):
+        return self.linear(x)
 
 def setup(rank, world_size):
     os.environ['MASTER_ADDR'] = '10.0.0.2'  # Use the actual IP address
@@ -11,30 +21,42 @@ def cleanup():
     dist.destroy_process_group()
 
 def run(rank, world_size):
-    print(f"Running DDP example on rank {rank}.")
+    print(f"Running on rank {rank}.")
     setup(rank, world_size)
 
     # Use LOCAL_RANK to select the GPU
     local_rank = int(os.getenv('LOCAL_RANK', '0'))
 
-    # Ensure tensor operations are performed on the correct device
+    # Ensure operations are performed on the correct device
     device = torch.device(f"cuda:{local_rank}")
-    
-    # Create a tensor initialized to rank on the respective device
-    tensor = torch.ones(1, device=device) * (rank + 1)
-    print(f"Before all_reduce: Rank {rank}, local rank {local_rank}, has tensor {tensor}")
-    
-    # Perform an all-reduce operation to sum the tensors across all nodes
-    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
-    print(f"After all_reduce: Rank {rank}, local rank {local_rank}, has tensor {tensor}")
+    torch.cuda.set_device(device)
+
+    # Initialize model and wrap it with DDP
+    size = 5000  # Size of the matrix
+    model = SimpleModel(size).to(device)
+    model = DDP(model, device_ids=[local_rank])
+
+    # Generate random input data
+    inputs = torch.randn(size, size, device=device)
+
+    # Start timer
+    start_time = time.time()
+
+    # Perform forward pass (matrix multiplication in this case)
+    outputs = model(inputs)
+
+    # End timer
+    end_time = time.time() - start_time
+    print(f"Rank {rank}, local rank {local_rank}, computation time: {end_time:.2f} seconds")
 
     cleanup()
 
 def main():
-    world_size = 2  # Adjust based on the total number of processes across all nodes
-    rank = int(os.getenv('RANK', '0'))  # Use RANK for global rank, set by torch.distributed.launch or torchrun
+    world_size = 2  # Adjust this based on the total number of processes across all nodes
+    rank = int(os.getenv('RANK', '0'))  # Use RANK for global rank
 
     run(rank, world_size)
 
 if __name__ == "__main__":
     main()
+
