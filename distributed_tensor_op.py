@@ -47,7 +47,14 @@ def run(rank, world_size):
 
     # End timer
     end_time = time.time() - start_time
-    print(f"Rank {rank}, local rank {local_rank}, computation time: {end_time:.2f} seconds")
+
+    # Aggregate computation times from all ranks
+    total_time = torch.tensor(end_time, device=device)
+    dist.reduce(total_time, dst=0, op=dist.ReduceOp.MAX)
+
+    if rank == 0:
+        # Rank 0 will have the total time after reduction
+        print(f"Total computation time: {total_time.item():.2f} seconds")
 
     cleanup()
 
