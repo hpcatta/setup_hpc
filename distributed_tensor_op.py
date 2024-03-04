@@ -11,7 +11,7 @@ def cleanup():
     dist.destroy_process_group()
 
 def run(rank, world_size):
-    print(f"Running basic DDP example on rank {rank}.")
+    print(f"Running DDP example on rank {rank}.")
     setup(rank, world_size)
 
     # Use LOCAL_RANK to select the GPU
@@ -19,9 +19,14 @@ def run(rank, world_size):
 
     # Ensure tensor operations are performed on the correct device
     device = torch.device(f"cuda:{local_rank}")
-    tensor = torch.zeros(1, device=device)
-    tensor += 1
-    print(f"Rank {rank}, local rank {local_rank}, has tensor {tensor}")
+    
+    # Create a tensor initialized to rank on the respective device
+    tensor = torch.ones(1, device=device) * (rank + 1)
+    print(f"Before all_reduce: Rank {rank}, local rank {local_rank}, has tensor {tensor}")
+    
+    # Perform an all-reduce operation to sum the tensors across all nodes
+    dist.all_reduce(tensor, op=dist.ReduceOp.SUM)
+    print(f"After all_reduce: Rank {rank}, local rank {local_rank}, has tensor {tensor}")
 
     cleanup()
 
@@ -33,4 +38,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
