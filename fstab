@@ -1,0 +1,2 @@
+10.0.0.1:/data /data nfs4 rw,nosuid 0 0
+10.0.0.1:/home /home nfs defaults 0 0
