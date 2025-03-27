@@ -1,0 +1,88 @@
+# SlurmDBD Installation Guide for Ubuntu with Debugging Steps
+
+# Introduction
+# This detailed guide covers the steps to install and configure the Slurm Database Daemon (slurmdbd) with MariaDB on Ubuntu, including debugging and intermediate steps for troubleshooting.
+
+# Pre-requisites:
+# - Ubuntu Server with root or sudo privileges.
+# - Internet connectivity to download necessary packages.
+
+# Step 1: Install MariaDB
+sudo apt-get update
+sudo apt-get install mariadb-server
+
+# Step 2: Start and Enable MariaDB
+sudo systemctl enable --now mariadb
+
+# Verify MariaDB is running
+systemctl status mariadb
+
+# Step 3: Secure the Database
+# Run the secure installation script to set up the database securely. You will set a root password and configure other security-related settings.
+sudo mysql_secure_installation
+
+# Step 4: Set Up the Slurm Database and User
+# Connect to the MariaDB server:
+mysql -u root -p
+
+# Create a dedicated user for Slurm and grant it the necessary permissions. Replace PASSWORD with a strong password.
+CREATE USER 'slurm'@'localhost' IDENTIFIED BY 'PASSWORD';
+GRANT ALL ON slurm_acct_db.* TO 'slurm'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+
+# Check MySQL listening status to ensure it is set up correctly
+netstat -tunlp | grep 3306
+
+# Step 5: Install SlurmDBD Dependencies
+sudo apt-get install libhttp-parser-dev libjson-c-dev
+
+# Step 6: Download and Compile Slurm
+export VER=22.05.9
+wget https://download.schedmd.com/slurm/slurm-$VER.tar.bz2
+tar jxvf slurm-$VER.tar.bz2
+cd slurm-$VER
+./configure --prefix=/usr --sysconfdir=/etc/slurm --enable-pam --with-pam_dir=/lib/x86_64-linux-gnu/security/ --without-shared-libslurm --enable-slurmrestd
+make
+sudo make install
+
+# Step 7: Configure SlurmDBD
+# Edit the /etc/slurm/slurmdbd.conf file to configure the database connection.
+vim /etc/slurm/slurmdbd.conf
+# Update the file with the following configurations:
+# StorageUser=slurm
+# StoragePass=PASSWORD  # the password set earlier
+# StorageLoc=slurm_acct_db
+# DbdAddr=localhost
+# DbdHost=localhost
+
+# Step 8: Start and Enable SlurmDBD
+sudo systemctl enable --now slurmdbd
+
+# Check SlurmDBD status and log for any errors
+systemctl status slurmdbd
+tail -n 70 /var/log/slurm/slurmdbd.log
+
+# Step 9: Configure Slurm to Use SlurmDBD
+# Edit the /etc/slurm/slurm.conf file to enable accounting.
+vim /etc/slurm/slurm.conf
+# Ensure the following lines are present and configured:
+# JobAcctGatherType=jobacct_gather/linux
+# JobAcctGatherFrequency=30
+# AccountingStorageType=accounting_storage/slurmdbd
+# AccountingStorageHost=localhost
+
+# Step 10: Verify Installation
+# Check that all services are running correctly.
+systemctl status slurmdbd
+systemctl status mariadb
+systemctl restart slurmctld
+systemctl status slurmctld
+
+# Final Verification: Check network status to ensure all necessary services are listening on their respective ports
+netstat -tunlp | grep -i slurm
+netstat -tunlp | grep -i mysql
+
+# Conclusion
+# This comprehensive guide includes installation, configuration, and debugging steps to set up `slurmdbd` with MariaDB on an Ubuntu system. Adjust configurations and replace placeholders as necessary to fit your specific environment.
+

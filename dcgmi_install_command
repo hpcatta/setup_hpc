@@ -1,0 +1,109 @@
+root@huron:/home/mertcan# history | grep -C 2  dcgmi
+  131  ls -arlt
+  132  df -h
+  133  which dcgmi
+  134  cat /etc/os-release 
+  135  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-ubuntu2204.pin
+--
+  138  sudo apt-get update
+  139  sudo apt-get install datacenter-gpu-manager
+  140  dcgmi stats -g 0 -s 12
+  141  df -h
+  142  cd /mnt/thenas/gpu_monitoring/
+--
+  149  pip3 install clickhouse_connect
+  150  python3 collect_data.py 
+  151  dcgmi discovery -l
+  152  python3 collect_data.py 
+  153  dcgmi status --gpu 0
+  154  ls -arlt
+  155  cat collect_data.py 
+  156  #dcgmi', 'stats', '-g', str(group_id), '-j', job_id, '-v'
+  157  dcgmi stats -g 0 -j 12 -v
+  158  htop
+  159  nvidia-smi
+  160  systemctl status nvidia-dcgm
+  161  dcgmi -v
+  162  dcgmi discovery -l
+  163  dcgmi status --gpu 0
+  164  dcgmi stats --gpu 0
+  165  dcgmi stats -g 0 -j 12 -v
+  166  dcgmi stats --host 127.0.0.1
+  167  sudo journalctl -u nvidia-dcgm -f
+  168  dcgmi stats --host 127.0.0.1 -a -v
+  169  history | grep dcgmi
+  170  dcgmi stats -g 0 -s 12
+  171  dcgmi stats -g 0 -j 12 -v
+  172  history 
+  173  dcgmi stats --enable
+  174  dcgmi stats -g 0 -j 12 -v
+  175  ls -arlt
+  176  python3 collect_data.py 
+  177  history | grep dcgmi
+  178  crontab -e
+  179  ls
+--
+  184  tail -n1000 /tmp/gpu_monitoring.log
+  185  crontab -l
+  186  tail -n1000 /tmp/gpu_monitoring.log | grep -v "running dcgmi command"
+  187  tail -n1000000 /tmp/gpu_monitoring.log | grep -v "running dcgmi command"
+  188  tail -n10000000 /tmp/gpu_monitoring.log | grep -v "running dcgmi command"
+  189  head -n 1000 /tmp/gpu_monitoring.log 
+  190  #head -n 1000 /tmp/gpu_monitoring.log 
+--
+  193  crontab -l
+  194  vim /mnt/thenas/gpu_monitoring/collect_data.py
+  195  history | grep dcgmi
+  196  dcgmi stats -g 0 -j 12 -v
+  197  history | grep -C 2  dcgmi
+  198  systemctl status nvidia-dcgm
+  199  dcgmi group -l
+  200  dcgmi stats --enable
+  201  dcgmi stats -g 0 -j 12 -v
+  202  dcgmi stats 
+  203  dcgmi stats -g 0
+  204  dcgmi stats -g 0 --enable
+  205  dcgmi stats -g 0 -j 12 -v
+  206  dcgmi stats -l
+  207  dcgmi group -l
+  208  history | grep -C 2  dcgmi
+root@huron:/home/mertcan# dcgmi stats --host 127.0.0.1 -a -v
+Successfully removed all jobs.
+root@huron:/home/mertcan# dcgmi stats -g 0 -s 12
+Successfully started recording stats for 12.
+root@huron:/home/mertcan# dcgmi stats -g 0 -j 12 -v
+Successfully retrieved statistics for job: 12. 
++------------------------------------------------------------------------------+
+| GPU ID: 0                                                                    |
++====================================+=========================================+
+|-----  Execution Stats  ------------+-----------------------------------------|
+| Start Time                         | Mon Dec  9 19:19:40 2024                |
+| End Time                           | Mon Dec  9 19:19:59 2024                |
+| Total Execution Time (sec)         | 19.3                                    |
+| No. of Processes                   | 0                                       |
++-----  Performance Stats  ----------+-----------------------------------------+
+| Energy Consumed (Joules)           | Not Specified                           |
+| Power Usage (Watts)                | Avg: N/A, Max: N/A, Min: N/A            |
+| Max GPU Memory Used (bytes)        | 0                                       |
+| SM Clock (MHz)                     | Avg: 0, Max: 0, Min: 0                  |
+| Memory Clock (MHz)                 | Avg: 0, Max: 0, Min: 0                  |
+| SM Utilization (%)                 | Avg: 0, Max: 0, Min: 0                  |
+| Memory Utilization (%)             | Avg: 0, Max: 0, Min: 0                  |
+| PCIe Rx Bandwidth (megabytes)      | Avg: 0, Max: 0, Min: 0                  |
+| PCIe Tx Bandwidth (megabytes)      | Avg: 0, Max: 0, Min: 0                  |
++-----  Event Stats  ----------------+-----------------------------------------+
+| Single Bit ECC Errors              | 0                                       |
+| Double Bit ECC Errors              | Not Specified                           |
+| PCIe Replay Warnings               | Not Specified                           |
+| Critical XID Errors                | 0                                       |
++-----  Slowdown Stats  -------------+-----------------------------------------+
+| Due to - Power (%)                 | Not Supported                           |
+|        - Thermal (%)               | Not Supported                           |
+|        - Reliability (%)           | Not Supported                           |
+|        - Board Limit (%)           | Not Supported                           |
+|        - Low Utilization (%)       | Not Supported                           |
+|        - Sync Boost (%)            | Not Specified                           |
++-----  Overall Health  -------------+-----------------------------------------+
+| Overall Health                     | Healthy                                 |
++------------------------------------+-----------------------------------------+
+
