@@ -1,0 +1,95 @@
+{
+  "name": "SmartHPCAssistant",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slack-intake"
+      },
+      "name": "Slack Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-600, 100]
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Parse Intent (LLM)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [-400, 100]
+    },
+    {
+      "parameters": {},
+      "name": "Store Task",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [-200, 200]
+    },
+    {
+      "parameters": {},
+      "name": "Set Reminder",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [-200, 0]
+    },
+    {
+      "parameters": {
+        "command": "log and analyze CLI",
+        "cwd": "/home/assistant"
+      },
+      "name": "Command Analyzer",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [0, 200]
+    },
+    {
+      "parameters": {},
+      "name": "Workflow Suggestions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [200, 200]
+    },
+    {
+      "parameters": {},
+      "name": "Weekly Summary",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "channel": "#personal-assistant",
+        "text": "Your assistant summary and insights."
+      },
+      "name": "Send Summary",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [200, 0]
+    }
+  ],
+  "connections": {
+    "Slack Webhook": {
+      "main": [[{ "node": "Parse Intent (LLM)", "type": "main", "index": 0 }]]
+    },
+    "Parse Intent (LLM)": {
+      "main": [[
+        { "node": "Store Task", "type": "main", "index": 0 },
+        { "node": "Set Reminder", "type": "main", "index": 0 }
+      ]]
+    },
+    "Weekly Summary": {
+      "main": [[{ "node": "Send Summary", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "assistant_v1",
+  "id": "SmartAssistant",
+  "tags": ["assistant", "hpc", "automation"]
+}
