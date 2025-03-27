@@ -1,0 +1,322 @@
+{
+  "name": "ControllerNodeConfiguration",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hpc-setup",
+        "options": {}
+      },
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        260
+      ],
+      "id": "4259629b-1198-4915-9878-8215b48f021b",
+      "webhookId": "962bbe91-eba8-4aaa-a550-e975f0593fb8",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.openai.com/v1/chat/completions",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "name": "Parse Intent with LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        -300,
+        260
+      ],
+      "id": "b964a935-a396-4db8-baa7-3d1a995db267",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "command": "sudo -E apt update && sudo -E apt install -y nfs-kernel-server",
+        "cwd": "/home/slurmcontrol"
+      },
+      "name": "Setup NFS Server",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7e393770-894e-4f5e-b87c-ad5999eeddf8",
+      "executeOnce": true,
+      "credentials": {
+        "sshPassword": {
+          "id": "3WQKszPdo2CCthmE",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Provision Compute Nodes",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ],
+      "id": "b879cad0-7f69-4b38-a425-2e9cd1b1cdf6",
+      "credentials": {
+        "sshPassword": {
+          "id": "3WQKszPdo2CCthmE",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "telnet  192.168.50.218 22"
+      },
+      "name": "Check Connectivity",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "id": "3af96a79-65a1-4c82-adbf-ac0cc8ad090e",
+      "credentials": {
+        "sshPassword": {
+          "id": "3WQKszPdo2CCthmE",
+          "name": "SSH Password account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "name": "Check Time Sync",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        360,
+        240
+      ],
+      "id": "f169aa7c-68f6-4408-bd8e-6b603da8fa32"
+    },
+    {
+      "parameters": {},
+      "name": "Check File System",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        300,
+        400
+      ],
+      "id": "b0a99442-0df2-495c-bf59-bd75bb84fd41"
+    },
+    {
+      "parameters": {},
+      "name": "Check SLURM Services",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        820,
+        20
+      ],
+      "id": "a1e3fc38-4bdd-45cc-9648-1b0060ece221"
+    },
+    {
+      "parameters": {},
+      "name": "Submit Test Job",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [
+        600,
+        260
+      ],
+      "id": "d7a493b8-f656-4251-92f8-787ff7a4ca69"
+    },
+    {
+      "parameters": {
+        "url": "http://prometheus.example.com/api/v1/targets",
+        "options": {}
+      },
+      "name": "Check Prometheus Targets",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 2,
+      "position": [
+        820,
+        400
+      ],
+      "id": "66f33d45-b220-472a-82ab-2780179c20dc"
+    },
+    {
+      "parameters": {
+        "channel": "#hpc-alerts",
+        "text": "HPC provisioning and validation completed successfully.",
+        "otherOptions": {},
+        "attachments": []
+      },
+      "name": "Notify Slack",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        260
+      ],
+      "id": "06d151e9-af38-4634-be39-3c28c6d8d80c"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import socket\nimport os\nimport json\n\ndef get_ip():\n    try:\n        return socket.gethostbyname(socket.gethostname())\n    except:\n        return \"Unavailable\"\n\ndef get_num_cores():\n    try:\n        return os.cpu_count()\n    except:\n        return \"Unavailable\"\n\ndef get_memory():\n    try:\n        with open(\"/proc/meminfo\") as f:\n            for line in f:\n                if line.startswith(\"MemTotal\"):\n                    kb = int(line.split()[1])\n                    return convert_bytes(kb * 1024)\n        return \"Unavailable\"\n    except:\n        return \"Unavailable\"\n\ndef convert_bytes(size):\n    for unit in ['B','KB','MB','GB','TB']:\n        if size < 1024:\n            return f\"{size:.2f} {unit}\"\n        size /= 1024\n\ndef get_interface_count():\n    try:\n        interfaces = os.listdir(\"/sys/class/net/\")\n        return len([i for i in interfaces if i])\n    except:\n        return \"Unavailable\"\n\nsystem_info = {\n    \"ip\": get_ip(),\n    \"num_cores\": get_num_cores(),\n    \"memory\": get_memory(),\n    \"num_interfaces\": get_interface_count()\n}\n\nreturn [{\"json\": system_info}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "b2d47fa1-b9d5-40a7-9cb8-18a976912618",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Parse Intent with LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Intent with LLM": {
+      "main": [
+        [
+          {
+            "node": "Setup NFS Server",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Provision Compute Nodes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Setup NFS Server": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Provision Compute Nodes": {
+      "main": [
+        [
+          {
+            "node": "Check File System",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Connectivity": {
+      "main": [
+        [
+          {
+            "node": "Check Time Sync",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Time Sync": {
+      "main": [
+        [
+          {
+            "node": "Check SLURM Services",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check File System": {
+      "main": [
+        [
+          {
+            "node": "Submit Test Job",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check SLURM Services": {
+      "main": [
+        [
+          {
+            "node": "Check Prometheus Targets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit Test Job": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Prometheus Targets": {
+      "main": [
+        [
+          {
+            "node": "Notify Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Check Connectivity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3198c703-232e-4f61-b04a-d1d5d6a30790",
+  "meta": {
+    "instanceId": "40f96293e3b984cbb67b59071200c7f03ee39e4c36e9741a9ac9ea582acda716"
+  },
+  "id": "JPvqxz22EowYcq3s",
+  "tags": []
+}
