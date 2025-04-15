@@ -1,0 +1,40 @@
+
+S3 Cost Analysis – March 2025
+-----------------------------
+
+Total Cost: $169.07 USD
+
+Breakdown by Usage Type:
+
+| Usage Type                              | Cost (USD) | Description                                      |
+|----------------------------------------|------------|--------------------------------------------------|
+| EUC1-TimedStorage-ByteHrs              | $142.27    | Cost of objects stored in S3 Standard            |
+| EUC1-TimedStorage-GIR-ByteHrs          | $26.77     | Glacier Instant Retrieval storage charges        |
+| EUC1-Requests-Tier1                    | $0.02      | Tier-1 requests (GET, PUT, LIST, etc.)           |
+| EUC1-TimedStorage-GIR-SmObjects        | $0.01      | Glacier IR small object overhead                 |
+| EUC1-Requests-Tier2                    | $0.00      | Tier-2 request charges (non-applicable)          |
+| Requests-Tier1                         | $0.00      | (Possibly from another region)                   |
+| USE1-EUC1-AWS-Out-Bytes                | $0.00      | No cross-region or external data transfer        |
+| Global-Bucket-Hrs-FreeTier            | $0.00      | Free tier not applicable or already exhausted    |
+
+Observations:
+
+- ~84% of the cost comes from S3 Standard storage.
+- ~16% is from Glacier Instant Retrieval — suggesting a lifecycle policy is in place.
+- Request & retrieval costs are negligible, indicating infrequent access.
+- No data transfer out costs, so data isn’t being downloaded to the internet or other regions.
+- Gradual increase in storage cost month-over-month — likely due to growing object size or longer retention.
+
+Recommendations:
+
+1. Review Lifecycle Policy:
+   - Consider transitioning data to Glacier Flexible Retrieval or Deep Archive if access is rare.
+   
+2. Evaluate Retention:
+   - Identify stale data that can be archived or deleted to cut ByteHrs storage cost.
+
+3. Enable S3 Storage Lens:
+   - For deeper per-bucket and object-age insights.
+
+4. Set Budget Alerts:
+   - Notify when S3 monthly cost exceeds a threshold (e.g., $150).

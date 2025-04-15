@@ -1,0 +1,87 @@
+Title: DNS and SSL Migration for License Server to dev-license.rankone.io
+=========================================================================
+
+1. DNS Configuration
+--------------------
+- Allocated a new Elastic IP to the test EC2 instance.
+- Updated the A Record in domain registrar to point dev-license.rankone.io to the new Elastic IP.
+
+2. Firewall/Security Group
+--------------------------
+- Allowed the rule  firewalld for dev-license.rankone.io 
+( So we not need to open port for all world )  
+
+3. Certbot Installation
+-----------------------
+sudo apt update
+sudo apt install certbot python3-certbot-nginx -y
+
+4. Initial Troubleshooting
+--------------------------
+- curl -I http://dev-license.rankone.io failed initially.
+- Opened port 80 in the security group.
+- Verified using: curl -I http://dev-license.rankone.io
+
+5. Requesting SSL Certificate
+-----------------------------
+sudo certbot --nginx -d dev-license.rankone.io -v
+
+- Certificates saved at: /etc/letsencrypt/live/dev-license.rankone.io/
+- Certbot successfully deployed certificate.
+- Nginx configuration auto-modified.
+
+6. Manual Nginx Configuration Cleanup
+-------------------------------------
+- Edited: /etc/nginx/sites-available/license_server_nginx.conf
+- Removed conflicting blocks like:
+  server {
+      if ($host = dev-license.rankone.io) {
+          return 301 https://$host$request_uri;
+      }
+  }
+- Replaced default '_' server_name with: server_name dev-license.rankone.io;
+
+7. Final Nginx Configuration Block
+----------------------------------
+server {
+    listen 80;
+    listen [::]:80;
+    server_name dev-license.rankone.io;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name dev-license.rankone.io;
+
+    include snippets/ssl-dev-license.rankone.io.conf;
+    include snippets/ssl-params.conf;
+
+    charset utf-8;
+    client_max_body_size 1M;
+
+    location /.well-known {
+        alias /home/ubuntu/license_server/.well-known;
+    }
+
+    location /static {
+        alias /home/ubuntu/license_server/static;
+    }:
+
+    location / {
+        uwsgi_pass django;
+        include /home/ubuntu/license_server/uwsgi_params;
+    }
+}
+
+8. Reloading and Validation
+---------------------------
+sudo nginx -t && sudo systemctl reload nginx
+curl -Iv https://dev-license.rankone.io
+
+9. Auto-Renewal Validation
+--------------------------
+sudo certbot renew --dry-run
+
+
